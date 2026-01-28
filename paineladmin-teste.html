@@ -30,30 +30,31 @@
             <div>
                 <h3>➕ Nova Pergunta</h3>
                 <input type="text" id="new-q" placeholder="Pergunta">
-                <input type="text" id="new-c" placeholder="Correta">
+                <input type="text" id="new-c" placeholder="Opção Correta">
                 <input type="text" id="new-e1" placeholder="Errada 1">
                 <input type="text" id="new-e2" placeholder="Errada 2">
-                <input type="text" id="new-setor" placeholder="Setor" value="homolog">
-                <button class="btn" onclick="salvarPergunta()">SALVAR</button>
+                <input type="text" id="new-setor" placeholder="Setor (use 'homolog')" value="homolog">
+                <button class="btn" onclick="salvarPergunta()">SALVAR PERGUNTA</button>
             </div>
-            <div id="status-box">
+            <div>
                 <h3>📊 Status</h3>
-                <p>Logado com sucesso!</p>
+                <p>Sistema Conectado ao Supabase!</p>
             </div>
         </div>
     </div>
 
     <script>
-        // CHAVES CONFIGURADAS CONFORME SEUS PRINTS
+        // CONFIGURAÇÃO REAL EXTRAÍDA DOS SEUS DADOS
         const _supabase = supabase.createClient(
             'https://vkhhxafaaalprvqoxmkm.supabase.co', 
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk'
         );
 
         async function autenticar() {
-            const s = document.getElementById('login-setor').value;
-            const p = document.getElementById('login-pass').value;
+            const s = document.getElementById('login-setor').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
 
+            // Busca na tabela gestores que você criou no SQL
             const { data, error } = await _supabase
                 .from('gestores')
                 .select('*')
@@ -66,7 +67,7 @@
                 document.getElementById('screen-dash').classList.remove('hidden');
                 document.getElementById('label-setor').innerText = s;
             } else {
-                alert("Acesso negado! Verifique o SQL Editor.");
+                alert("Acesso negado! Verifique o setor e senha no Supabase.");
             }
         }
 
@@ -77,11 +78,14 @@
             const e2 = document.getElementById('new-e2').value;
             const s = document.getElementById('new-setor').value;
 
-            const { error } = await _supabase.from('perguntas').insert([
-                { pergunta: q, opcoes: [c, e1, e2], correta: 0, setor: s }
-            ]);
+            const { error } = await _supabase.from('perguntas').insert([{ 
+                pergunta: q, 
+                opcoes: [c, e1, e2], 
+                correta: 0, 
+                setor: s 
+            }]);
 
-            if(!error) alert("Pergunta salva!");
+            if(!error) alert("Pergunta salva com sucesso!");
             else alert("Erro: " + error.message);
         }
     </script>
