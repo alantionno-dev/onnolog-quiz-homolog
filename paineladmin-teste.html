@@ -5,79 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADM OnnoLog - Homologação</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #018578; --bg: #0f172a; --text: #ffffff; --card: rgba(255, 255, 255, 0.1); }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .admin-panel { background: var(--primary); width: 100%; max-width: 800px; padding: 40px; border-radius: 32px; box-shadow: 0 30px 60px rgba(0,0,0,0.4); text-align: center; }
+        :root { --primary: #018578; --bg: #0f172a; --text: #ffffff; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .panel { background: var(--primary); padding: 30px; border-radius: 20px; text-align: center; width: 350px; }
         .hidden { display: none; }
-        input { width: 100%; padding: 12px; background: var(--card); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; margin-bottom: 10px; box-sizing: border-box; }
-        .btn { background: white; color: var(--primary); border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
-        h2 { border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: var(--card); border-radius: 16px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: white; color: var(--primary); font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="admin-panel" id="screen-login" style="max-width: 380px;">
+    <div class="panel" id="screen-login">
         <h2>🔐 ADM Login</h2>
-        <input type="text" id="login-setor" placeholder="Setor (TI ou homolog)">
+        <input type="text" id="login-setor" placeholder="Setor (Ex: TI)">
         <input type="password" id="login-pass" placeholder="Senha">
-        <button class="btn" onclick="autenticar()">ENTRAR NO PAINEL</button>
+        <button onclick="autenticar()">ENTRAR</button>
     </div>
 
-    <div class="admin-panel hidden" id="screen-dash">
-        <h2>Painel: <span id="label-setor">---</span></h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; text-align: left;">
-            <div>
-                <h3>➕ Nova Pergunta</h3>
-                <input type="text" id="new-q" placeholder="Pergunta">
-                <input type="text" id="new-c" placeholder="Opção Correta">
-                <input type="text" id="new-e1" placeholder="Errada 1">
-                <input type="text" id="new-e2" placeholder="Errada 2">
-                <input type="text" id="new-setor" placeholder="Setor" value="homolog">
-                <button class="btn" onclick="salvarPergunta()">SALVAR PERGUNTA</button>
-            </div>
-            <div>
-                <h3>📊 Ranking</h3>
-                <table id="rank-table">
-                    <thead><tr><th>Nome</th><th>Pontos</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+    <div class="panel hidden" id="screen-dash">
+        <h2>Painel: <span id="label-setor"></span></h2>
+        <input type="text" id="new-q" placeholder="Pergunta">
+        <input type="text" id="new-c" placeholder="Resposta Correta">
+        <input type="text" id="new-e1" placeholder="Errada 1">
+        <input type="text" id="new-e2" placeholder="Errada 2">
+        <input type="text" id="new-setor" placeholder="Setor" value="homolog">
+        <button onclick="salvar()">SALVAR PERGUNTA</button>
     </div>
 
     <script>
-        // URL CORRIGIDA: APENAS UM 'L' EM AFAL
-        const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+        // ESTA É A LINHA QUE ESTAVA DANDO ERRO. USE EXATAMENTE ASSIM:
+        const supabaseUrl = 'https://vkhhxafaallprvqoxmkm.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk';
+        
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function autenticar() {
             const s = document.getElementById('login-setor').value.trim();
             const p = document.getElementById('login-pass').value.trim();
-            const { data, error } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
-            if (data) {
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('screen-dash').classList.remove('hidden');
-                document.getElementById('label-setor').innerText = s;
-                carregarRanking();
-            } else { alert("Acesso negado! Verifique os dados no Supabase."); }
+            
+            try {
+                const { data, error } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
+                if (data) {
+                    document.getElementById('screen-login').classList.add('hidden');
+                    document.getElementById('screen-dash').classList.remove('hidden');
+                    document.getElementById('label-setor').innerText = s;
+                } else { alert("Acesso negado! Verifique os dados no Supabase."); }
+            } catch (err) {
+                console.error(err);
+                alert("Erro de conexão. Verifique o console (F12).");
+            }
         }
 
-        async function salvarPergunta() {
+        async function salvar() {
             const q = document.getElementById('new-q').value;
             const c = document.getElementById('new-c').value;
             const e1 = document.getElementById('new-e1').value;
             const e2 = document.getElementById('new-e2').value;
             const s = document.getElementById('new-setor').value;
-            const { error } = await _supabase.from('perguntas').insert([{ pergunta: q, opcoes: [c, e1, e2], correta: 0, setor: s }]);
-            if(!error) { alert("Pergunta salva!"); document.getElementById('new-q').value = ""; }
-        }
 
-        async function carregarRanking() {
-            const { data } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
-            const tbody = document.querySelector('#rank-table tbody');
-            tbody.innerHTML = (data || []).map(r => `<tr><td>${r.nome}</td><td>${r.pontos}</td></tr>`).join('');
+            const { error } = await _supabase.from('perguntas').insert([{ pergunta: q, opcoes: [c, e1, e2], correta: 0, setor: s }]);
+            if (!error) alert("Pergunta salva!");
+            else alert("Erro ao salvar: " + error.message);
         }
     </script>
 </body>
