@@ -49,7 +49,6 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO COM SUAS CHAVES REAIS
         const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
 
         async function autenticar() {
@@ -61,7 +60,7 @@
                 document.getElementById('screen-dash').classList.remove('hidden');
                 document.getElementById('label-setor').innerText = s;
                 carregarRanking();
-            } else { alert("Acesso negado! Verifique no Supabase."); }
+            } else { alert("Acesso negado! Verifique os dados no Supabase."); }
         }
 
         async function salvarPergunta() {
