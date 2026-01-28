@@ -2,86 +2,73 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>OnnoLog Challenge</title>
+    <title>OnnoLog Quiz - 30s</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #018578; --bg: #0f172a; }
         body { font-family: sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .quiz-card { background: var(--primary); padding: 40px; border-radius: 35px; width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        .timer-box { font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 50%; width: 60px; height: 60px; line-height: 60px; margin: 0 auto 20px; }
-        .option { background: rgba(255,255,255,0.1); border: 2px solid white; padding: 15px; border-radius: 12px; margin-top: 10px; cursor: pointer; transition: 0.3s; }
-        .option:hover { background: white; color: var(--primary); }
+        .card { background: var(--primary); padding: 40px; border-radius: 35px; width: 400px; text-align: center; }
+        .timer { font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.3); width: 60px; height: 60px; line-height: 60px; border-radius: 50%; margin: 0 auto 20px; }
+        .opt { background: rgba(255,255,255,0.1); border: 2px solid white; padding: 15px; border-radius: 12px; margin-top: 10px; cursor: pointer; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="quiz-card" id="start-screen">
+    <div class="card" id="home">
         <h1>OnnoLog Quiz</h1>
-        <input type="text" id="player" placeholder="Seu Nome" style="padding: 12px; border-radius: 8px; width: 80%; border: none; margin-bottom: 20px;">
-        <button onclick="começar()" style="padding: 15px 30px; border-radius: 10px; border: none; background: white; color: var(--primary); font-weight: bold; cursor: pointer;">INICIAR</button>
+        <input type="text" id="p-name" placeholder="Seu Nome" style="padding: 12px; width: 80%; border-radius: 8px; margin-bottom: 20px;">
+        <button onclick="jogar()" style="padding: 15px; width: 100%; border-radius: 10px; cursor: pointer;">INICIAR</button>
     </div>
 
-    <div class="quiz-card hidden" id="game-screen">
-        <div class="timer-box" id="clock">30</div>
-        <h2 id="question-text">---</h2>
-        <div id="options-list"></div>
+    <div class="card hidden" id="game">
+        <div class="timer" id="clock">30</div>
+        <h2 id="q-text">---</h2>
+        <div id="q-options"></div>
     </div>
 
     <script>
         const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94mkmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
-        let perguntas = [], idx = 0, pts = 0, acertos = 0, erros = 0, tempoTotal = 0, timer, tempoRestante = 30;
+        let perguntas = [], idx = 0, pts = 0, acertos = 0, erros = 0, tempoTotal = 0, tRestante = 30, tInt;
 
-        async function começar() {
-            if(!document.getElementById('player').value) return alert("Diga seu nome!");
+        async function jogar() {
             const { data } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
-            if(!data.length) return alert("Sem perguntas!");
             perguntas = data;
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            mostrarProxima();
+            document.getElementById('home').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+            proxima();
         }
 
-        function mostrarProxima() {
-            if(idx >= perguntas.length) return finalizar();
-            clearInterval(timer);
-            tempoRestante = 30;
-            document.getElementById('clock').innerText = tempoRestante;
-            
+        function proxima() {
+            if(idx >= perguntas.length) return fim();
+            clearInterval(tInt);
+            tRestante = 30;
             const p = perguntas[idx];
-            document.getElementById('question-text').innerText = p.pergunta;
-            const lista = document.getElementById('options-list');
-            lista.innerHTML = "";
-            
+            document.getElementById('q-text').innerText = p.pergunta;
+            const lista = document.getElementById('q-options'); lista.innerHTML = "";
             p.opcoes.forEach((opt, i) => {
-                const div = document.createElement('div');
-                div.className = "option";
-                div.innerText = opt;
-                div.onclick = () => responder(i === p.resposta_correta_index);
-                lista.appendChild(div);
+                const d = document.createElement('div'); d.className = "opt"; d.innerText = opt;
+                d.onclick = () => responder(i === p.resposta_correta_index);
+                lista.appendChild(d);
             });
-
-            timer = setInterval(() => {
-                tempoRestante--;
-                tempoTotal++;
-                document.getElementById('clock').innerText = tempoRestante;
-                if(tempoRestante <= 0) responder(false);
+            tInt = setInterval(() => {
+                tRestante--; tempoTotal++;
+                document.getElementById('clock').innerText = tRestante;
+                if(tRestante <= 0) responder(false);
             }, 1000);
         }
 
-        function responder(foiCorreto) {
-            if(foiCorreto) { acertos++; pts += (tempoRestante * 10); } else { erros++; }
-            idx++;
-            mostrarProxima();
+        function responder(c) {
+            if(c) { acertos++; pts += (tRestante * 10); } else { erros++; }
+            idx++; proxima();
         }
 
-        async function finalizar() {
-            const nome = document.getElementById('player').value;
+        async function fim() {
             await _supabase.from('ranking').insert([{ 
-                nome: nome, pontos: pts, acertos_quantidade: acertos, 
-                erros_quantidade: erros, tempo_total_gasto: tempoTotal, setor: 'homolog' 
+                nome: document.getElementById('p-name').value, pontos: pts, 
+                acertos_quantidade: acertos, erros_quantidade: erros, 
+                tempo_total_gasto: tempoTotal, setor: 'homolog' 
             }]);
-            alert(`Fim! Acertos: ${acertos}`);
-            location.reload();
+            alert("Fim do Quiz!"); location.reload();
         }
     </script>
 </body>
