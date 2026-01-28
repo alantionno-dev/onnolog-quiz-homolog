@@ -2,88 +2,87 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OnnoLog Quiz - Pro</title>
+    <title>OnnoLog Challenge</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #018578; --bg: #0f172a; --text: #ffffff; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
-        .game-card { background: var(--primary); width: 90%; max-width: 450px; padding: 40px; border-radius: 40px; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.6); position: relative; }
-        .timer-circle { width: 60px; height: 60px; border: 4px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; margin: 0 auto 20px; }
+        :root { --primary: #018578; --bg: #0f172a; }
+        body { font-family: sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .quiz-card { background: var(--primary); padding: 40px; border-radius: 35px; width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .timer-box { font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 50%; width: 60px; height: 60px; line-height: 60px; margin: 0 auto 20px; }
+        .option { background: rgba(255,255,255,0.1); border: 2px solid white; padding: 15px; border-radius: 12px; margin-top: 10px; cursor: pointer; transition: 0.3s; }
+        .option:hover { background: white; color: var(--primary); }
         .hidden { display: none; }
-        .option-btn { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; border-radius: 18px; margin-bottom: 12px; cursor: pointer; text-align: left; font-size: 16px; transition: 0.2s; }
-        .option-btn:hover { background: white; color: var(--primary); }
-        .btn-start { background: white; color: var(--primary); border: none; padding: 20px; border-radius: 20px; cursor: pointer; width: 100%; font-weight: 700; font-size: 18px; }
     </style>
 </head>
 <body>
-<div class="game-card" id="home">
-    <h1>OnnoLog Quiz</h1>
-    <input type="text" id="uname" placeholder="Seu nome" style="width:100%; padding:15px; border-radius:15px; border:none; margin-bottom:20px;">
-    <button class="btn-start" onclick="iniciar()">INICIAR DESAFIO</button>
-</div>
+    <div class="quiz-card" id="start-screen">
+        <h1>OnnoLog Quiz</h1>
+        <input type="text" id="player" placeholder="Seu Nome" style="padding: 12px; border-radius: 8px; width: 80%; border: none; margin-bottom: 20px;">
+        <button onclick="começar()" style="padding: 15px 30px; border-radius: 10px; border: none; background: white; color: var(--primary); font-weight: bold; cursor: pointer;">INICIAR</button>
+    </div>
 
-<div class="game-card hidden" id="quiz">
-    <div class="timer-circle" id="timer">30</div>
-    <h2 id="q-text">---</h2>
-    <div id="options"></div>
-</div>
+    <div class="quiz-card hidden" id="game-screen">
+        <div class="timer-box" id="clock">30</div>
+        <h2 id="question-text">---</h2>
+        <div id="options-list"></div>
+    </div>
 
-<script>
-    const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
-    let perguntas = [], idx = 0, pts = 0, acertos = 0, erros = 0, tempoTotal = 0, user = "", tVal = 30, tInt;
+    <script>
+        const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94mkmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+        let perguntas = [], idx = 0, pts = 0, acertos = 0, erros = 0, tempoTotal = 0, timer, tempoRestante = 30;
 
-    async function iniciar() {
-        user = document.getElementById('uname').value;
-        const { data } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
-        if(!data || data.length === 0) return alert("Sem perguntas!");
-        perguntas = data.sort(() => Math.random() - 0.5);
-        document.getElementById('home').classList.add('hidden');
-        document.getElementById('quiz').classList.remove('hidden');
-        proxima();
-    }
+        async function começar() {
+            if(!document.getElementById('player').value) return alert("Diga seu nome!");
+            const { data } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
+            if(!data.length) return alert("Sem perguntas!");
+            perguntas = data;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            mostrarProxima();
+        }
 
-    function proxima() {
-        if(idx >= perguntas.length) return finalizar();
-        clearInterval(tInt);
-        tVal = 30;
-        document.getElementById('timer').innerText = tVal;
-        
-        const q = perguntas[idx];
-        document.getElementById('q-text').innerText = q.pergunta;
-        const box = document.getElementById('options'); box.innerHTML = "";
-        
-        // Embaralha opções
-        let opts = q.opcoes.map((o, i) => ({o, i})).sort(() => Math.random() - 0.5);
-        
-        opts.forEach(item => {
-            const b = document.createElement('button');
-            b.className = "option-btn";
-            b.innerText = item.o;
-            b.onclick = () => responder(item.i === q.correta);
-            box.appendChild(b);
-        });
+        function mostrarProxima() {
+            if(idx >= perguntas.length) return finalizar();
+            clearInterval(timer);
+            tempoRestante = 30;
+            document.getElementById('clock').innerText = tempoRestante;
+            
+            const p = perguntas[idx];
+            document.getElementById('question-text').innerText = p.pergunta;
+            const lista = document.getElementById('options-list');
+            lista.innerHTML = "";
+            
+            p.opcoes.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = "option";
+                div.innerText = opt;
+                div.onclick = () => responder(i === p.resposta_correta_index);
+                lista.appendChild(div);
+            });
 
-        tInt = setInterval(() => {
-            tVal--;
-            tempoTotal++;
-            document.getElementById('timer').innerText = tVal;
-            if(tVal <= 0) responder(false);
-        }, 1000);
-    }
+            timer = setInterval(() => {
+                tempoRestante--;
+                tempoTotal++;
+                document.getElementById('clock').innerText = tempoRestante;
+                if(tempoRestante <= 0) responder(false);
+            }, 1000);
+        }
 
-    function responder(correto) {
-        if(correto) { acertos++; pts += (tVal * 10); } else { erros++; }
-        idx++;
-        proxima();
-    }
+        function responder(foiCorreto) {
+            if(foiCorreto) { acertos++; pts += (tempoRestante * 10); } else { erros++; }
+            idx++;
+            mostrarProxima();
+        }
 
-    async function finalizar() {
-        await _supabase.from('ranking').insert([{ nome: user, pontos: pts, acertos, erros, tempo_total: tempoTotal, setor: 'homolog' }]);
-        alert(`Fim! Pontos: ${pts} | Acertos: ${acertos}`);
-        location.reload();
-    }
-</script>
+        async function finalizar() {
+            const nome = document.getElementById('player').value;
+            await _supabase.from('ranking').insert([{ 
+                nome: nome, pontos: pts, acertos_quantidade: acertos, 
+                erros_quantidade: erros, tempo_total_gasto: tempoTotal, setor: 'homolog' 
+            }]);
+            alert(`Fim! Acertos: ${acertos}`);
+            location.reload();
+        }
+    </script>
 </body>
 </html>
