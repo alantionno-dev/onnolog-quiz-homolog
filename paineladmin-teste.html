@@ -7,20 +7,83 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #018578; --bg: #0f172a; --text: #ffffff; --card-inner: rgba(255, 255, 255, 0.1); }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .admin-panel { background: var(--primary); width: 100%; max-width: 800px; padding: 40px; border-radius: 32px; box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        :root { 
+            --primary: #018578; 
+            --bg: #0f172a; 
+            --text: #ffffff; 
+            --card-inner: rgba(255, 255, 255, 0.1); 
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+
+        /* O Painel com a sua cor de marca */
+        .admin-panel { 
+            background: var(--primary); 
+            width: 100%; 
+            max-width: 800px; 
+            padding: 40px; 
+            border-radius: 32px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4); 
+        }
+
         .hidden { display: none; }
+
         h2 { font-weight: 800; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
-        input { width: 100%; padding: 12px; background: var(--card-inner); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; margin-bottom: 10px; box-sizing: border-box; }
-        .btn { background: white; color: var(--primary); border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: var(--card-inner); border-radius: 16px; overflow: hidden; }
+
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            background: var(--card-inner); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 12px; 
+            color: white; 
+            margin-bottom: 10px; 
+            box-sizing: border-box; 
+        }
+
+        input::placeholder { color: rgba(255,255,255,0.6); }
+
+        .btn { 
+            background: white; 
+            color: var(--primary); 
+            border: none; 
+            padding: 14px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            width: 100%; 
+            transition: 0.3s; 
+        }
+
+        .btn:hover { background: #f0f0f0; transform: translateY(-2px); }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
+            background: var(--card-inner); 
+            border-radius: 16px; 
+            overflow: hidden; 
+        }
+
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
+
 <div class="admin-panel" id="screen-login" style="max-width: 380px; text-align: center;">
     <h2>🔐 ADM Login</h2>
+    <p>Acesso Homologação</p>
     <input type="text" id="login-setor" placeholder="Setor (Ex: TI)">
     <input type="password" id="login-pass" placeholder="Senha">
     <button class="btn" onclick="autenticar()">ENTRAR NO PAINEL</button>
@@ -28,18 +91,20 @@
 
 <div class="admin-panel hidden" id="screen-dash">
     <h2>Painel: <span id="label-setor">---</span></h2>
+    
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
         <div>
             <h3>➕ Nova Pergunta</h3>
-            <input type="text" id="new-q" placeholder="Pergunta">
+            <input type="text" id="new-q" placeholder="Texto da Pergunta">
             <input type="text" id="new-c" placeholder="Opção Correta">
             <input type="text" id="new-e1" placeholder="Opção Errada 1">
             <input type="text" id="new-e2" placeholder="Opção Errada 2">
-            <input type="text" id="new-setor" placeholder="Setor da Pergunta" value="homolog">
-            <button class="btn" onclick="salvarPergunta()">SALVAR PERGUNTA</button>
+            <input type="text" id="new-setor" placeholder="Setor (use 'homolog')" value="homolog">
+            <button class="btn" onclick="salvarPergunta()">SALVAR NO BANCO</button>
         </div>
+
         <div>
-            <h3>📊 Ranking Global</h3>
+            <h3>📊 Ranking Atual</h3>
             <table id="rank-table">
                 <thead><tr><th>Nome</th><th>Pontos</th></tr></thead>
                 <tbody></tbody>
@@ -49,21 +114,35 @@
 </div>
 
 <script>
-    // Configuração com as chaves do seu projeto novo
-    const _supabase = supabase.createClient('https://vkhhxafaaalprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+    // CONFIGURAÇÃO REAL DAS SUAS CHAVES
+    const _supabase = supabase.createClient(
+        'https://vkhhxafaaalprvqoxmkm.supabase.co', 
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk'
+    );
 
     let setorLogado = "";
+
     async function autenticar() {
-        const s = document.getElementById('login-setor').value;
-        const p = document.getElementById('login-pass').value;
-        const { data } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
-        if(data) {
+        const s = document.getElementById('login-setor').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+
+        // Busca o gestor na tabela que você criou no SQL
+        const { data, error } = await _supabase
+            .from('gestores')
+            .select('*')
+            .eq('setor', s)
+            .eq('senha', p)
+            .single();
+
+        if (data) {
             setorLogado = s;
             document.getElementById('screen-login').classList.add('hidden');
             document.getElementById('screen-dash').classList.remove('hidden');
             document.getElementById('label-setor').innerText = s;
             carregarDados();
-        } else { alert("Acesso negado! Verifique o SQL Editor."); }
+        } else {
+            alert("Acesso negado! Verifique o Setor e Senha no Supabase.");
+        }
     }
 
     async function salvarPergunta() {
@@ -72,15 +151,37 @@
         const e1 = document.getElementById('new-e1').value;
         const e2 = document.getElementById('new-e2').value;
         const s = document.getElementById('new-setor').value;
-        await _supabase.from('perguntas').insert([{ pergunta: q, opcoes: [c, e1, e2], correta: 0, setor: s }]);
-        alert("Pergunta salva com sucesso!");
-        carregarDados();
+
+        // Insere a pergunta no banco
+        const { error } = await _supabase.from('perguntas').insert([{ 
+            pergunta: q, 
+            opcoes: [c, e1, e2], 
+            correta: 0, 
+            setor: s 
+        }]);
+
+        if(!error) {
+            alert("Pergunta salva com sucesso!");
+            document.getElementById('new-q').value = "";
+            carregarDados();
+        } else {
+            alert("Erro ao salvar: " + error.message);
+        }
     }
 
     async function carregarDados() {
-        const { data: rs } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
+        const { data: rs } = await _supabase
+            .from('ranking')
+            .select('*')
+            .order('pontos', {ascending: false});
+        
         const tbody = document.querySelector('#rank-table tbody');
-        tbody.innerHTML = rs.map(r => `<tr><td>${r.nome}</td><td>${r.pontos}</td></tr>`).join('');
+        tbody.innerHTML = rs.map(r => `
+            <tr>
+                <td>${r.nome}</td>
+                <td>${r.pontos}</td>
+            </tr>
+        `).join('');
     }
 </script>
 </body>
