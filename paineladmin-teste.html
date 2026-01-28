@@ -2,17 +2,18 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>OnnoLog ADM - Pro</title>
+    <title>ADM OnnoLog - Dashboard Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #018578; --bg: #0b0f1a; --card: #161b22; --text: #f0f6fc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
         .hidden { display: none; }
-        .glass-card { background: var(--card); border: 1px solid #30363d; border-radius: 20px; padding: 25px; }
+        .glass-card { background: var(--card); border: 1px solid #30363d; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
-        input, select { width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; color: white; margin-bottom: 12px; box-sizing: border-box; }
-        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; }
+        label { display: block; margin-bottom: 15px; font-size: 14px; color: #8b949e; }
+        input, select { width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; color: white; margin-top: 5px; box-sizing: border-box; }
+        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
         th { background: #21262d; padding: 15px; border-bottom: 2px solid var(--primary); }
         td { padding: 12px; border-bottom: 1px solid #30363d; }
@@ -21,26 +22,27 @@
 <body>
     <div id="login-zone" style="max-width: 400px; margin: 100px auto; text-align: center;" class="glass-card">
         <h1 style="color: var(--primary)">OnnoLog ADM</h1>
-        <input type="text" id="adm-setor" placeholder="Setor (TI)">
-        <input type="password" id="adm-pass" placeholder="Senha">
-        <button class="btn" onclick="entrar()">ACESSAR SISTEMA</button>
+        <label>Setor de Acesso: <input type="text" id="adm-setor" placeholder="Ex: TI"></label>
+        <label>Senha Secreta: <input type="password" id="adm-pass" placeholder="***"></label>
+        <button class="btn" onclick="entrar()">ACESSAR DASHBOARD</button>
     </div>
 
     <div id="dash-zone" class="hidden">
         <div class="grid">
             <div class="glass-card">
                 <h3>➕ Nova Pergunta</h3>
-                <input type="text" id="q-txt" placeholder="Pergunta">
-                <input type="text" id="op0" placeholder="Opção 1">
-                <input type="text" id="op1" placeholder="Opção 2">
-                <input type="text" id="op2" placeholder="Opção 3">
-                <label style="font-size: 11px;">Qual é a resposta correta?</label>
-                <select id="q-correta">
-                    <option value="0">Opção 1</option>
-                    <option value="1">Opção 2</option>
-                    <option value="2">Opção 3</option>
-                </select>
-                <button class="btn" onclick="salvar()">GRAVAR QUESTÃO</button>
+                <label>Enunciado: <input type="text" id="q-txt" placeholder="A pergunta..."></label>
+                <label>Opção 1: <input type="text" id="op0" placeholder="Alternativa A"></label>
+                <label>Opção 2: <input type="text" id="op1" placeholder="Alternativa B"></label>
+                <label>Opção 3: <input type="text" id="op2" placeholder="Alternativa C"></label>
+                <label>Resposta Correta:
+                    <select id="q-correta">
+                        <option value="0">Opção 1</option>
+                        <option value="1">Opção 2</option>
+                        <option value="2">Opção 3</option>
+                    </select>
+                </label>
+                <button class="btn" onclick="salvar()">GRAVAR NO BANCO</button>
             </div>
             <div class="glass-card">
                 <h3>📊 Estatísticas Detalhadas</h3>
@@ -74,7 +76,7 @@
                 setor: 'homolog'
             };
             const { error } = await _supabase.from('perguntas').insert([item]);
-            if(!error) alert("Salvo com sucesso!");
+            if(!error) { alert("Salvo!"); location.reload(); }
         }
 
         async function carregarStats() {
