@@ -3,46 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM OnnoLog - Dashboard</title>
+    <title>OnnoLog - Master Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #018578; --bg: #0f172a; --text: #ffffff; --card: rgba(255, 255, 255, 0.05); }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .admin-container { background: var(--primary); width: 95%; max-width: 1000px; padding: 40px; border-radius: 40px; box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+        :root { --primary: #018578; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
         .hidden { display: none; }
-        .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; }
-        input, select { width: 100%; padding: 14px; background: var(--card); border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; color: white; margin-bottom: 12px; box-sizing: border-box; }
-        .btn { background: white; color: var(--primary); border: none; padding: 16px; border-radius: 14px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 20px; overflow: hidden; font-size: 14px; }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        h2, h3 { margin-top: 0; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 30px; }
+        .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+        input, select { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.3s; }
+        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        .btn-red { background: #ef4444; margin-top: 5px; font-size: 12px; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        .stat-badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        .correct { background: #10b98122; color: #10b981; }
+        .wrong { background: #ef444422; color: #ef4444; }
     </style>
 </head>
 <body>
-    <div class="admin-container" id="screen-login" style="max-width: 380px;">
-        <h2>🔐 ADM Login</h2>
-        <input type="text" id="login-setor" placeholder="Setor (TI)">
-        <input type="password" id="login-pass" placeholder="Senha">
-        <button class="btn" onclick="autenticar()">ACESSAR PAINEL</button>
+    <div class="container" id="login-box">
+        <div class="glass" style="max-width: 400px; margin: 100px auto; text-align: center;">
+            <h1 style="color: var(--primary)">🔐 OnnoLog ADM</h1>
+            <input type="text" id="adm-setor" placeholder="Setor (TI)">
+            <input type="password" id="adm-pass" placeholder="Senha">
+            <button class="btn" onclick="login()">ACESSAR SISTEMA</button>
+        </div>
     </div>
 
-    <div class="admin-container hidden" id="screen-dash">
+    <div class="container hidden" id="main-dash">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2>Painel de Controle: <span id="label-setor" style="color: var(--primary)"></span></h2>
+            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="location.reload()">SAIR</button>
+        </header>
+
         <div class="grid">
-            <div>
-                <h3>➕ Nova Questão</h3>
-                <input type="text" id="new-q" placeholder="Pergunta">
-                <input type="text" id="new-c" placeholder="Resposta CORRETA">
-                <input type="text" id="new-e1" placeholder="Errada 1">
-                <input type="text" id="new-e2" placeholder="Errada 2">
-                <select id="new-setor"><option value="homolog">Homologação</option><option value="TI">TI</option></select>
-                <button class="btn" onclick="salvarPergunta()">SALVAR</button>
+            <div class="glass">
+                <h3>➕ Gerenciar Perguntas</h3>
+                <input type="text" id="q-text" placeholder="Pergunta">
+                <input type="text" id="opt0" placeholder="Opção 1">
+                <input type="text" id="opt1" placeholder="Opção 2">
+                <input type="text" id="opt2" placeholder="Opção 3">
+                <label>Resposta Correta:</label>
+                <select id="q-correct">
+                    <option value="0">Opção 1</option>
+                    <option value="1">Opção 2</option>
+                    <option value="2">Opção 3</option>
+                </select>
+                <button class="btn" onclick="addPergunta()">SALVAR QUESTÃO</button>
+                <hr style="opacity: 0.1; margin: 20px 0;">
+                <h4>Perguntas Ativas</h4>
+                <div id="list-questions" style="max-height: 300px; overflow-y: auto;"></div>
             </div>
-            <div>
-                <h3>📊 Estatísticas / Ranking</h3>
+
+            <div class="glass">
+                <h3>📊 Ranking e Estatísticas</h3>
                 <table id="rank-table">
-                    <thead><tr><th>Nome</th><th>Pontos</th><th>✅</th><th>❌</th><th>Tempo</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Pontos</th>
+                            <th>✅ Acertos</th>
+                            <th>❌ Erros</th>
+                            <th>⏱️ Tempo</th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -50,33 +78,59 @@
     </div>
 
     <script>
-        const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+        const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94mkmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
 
-        async function autenticar() {
-            const s = document.getElementById('login-setor').value.trim();
-            const p = document.getElementById('login-pass').value.trim();
+        async function login() {
+            const s = document.getElementById('adm-setor').value;
+            const p = document.getElementById('adm-pass').value;
             const { data } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
-            if (data) {
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('screen-dash').classList.remove('hidden');
-                carregarRanking();
-            } else { alert("Acesso negado!"); }
+            if(data) {
+                document.getElementById('login-box').classList.add('hidden');
+                document.getElementById('main-dash').classList.remove('hidden');
+                document.getElementById('label-setor').innerText = s;
+                loadData();
+            } else { alert("Dados incorretos!"); }
         }
 
-        async function salvarPergunta() {
-            const q = document.getElementById('new-q').value;
-            const c = document.getElementById('new-c').value;
-            const e1 = document.getElementById('new-e1').value;
-            const e2 = document.getElementById('new-e2').value;
-            const s = document.getElementById('new-setor').value;
-            const { error } = await _supabase.from('perguntas').insert([{ pergunta: q, opcoes: [c, e1, e2], correta: 0, setor: s }]);
-            if(!error) { alert("Salvo!"); document.getElementById('new-q').value = ""; }
+        async function addPergunta() {
+            const payload = {
+                pergunta: document.getElementById('q-text').value,
+                opcoes: [document.getElementById('opt0').value, document.getElementById('opt1').value, document.getElementById('opt2').value],
+                correta: parseInt(document.getElementById('q-correct').value),
+                setor: 'homolog'
+            };
+            const { error } = await _supabase.from('perguntas').insert([payload]);
+            if(!error) { alert("Sucesso!"); loadData(); }
         }
 
-        async function carregarRanking() {
-            const { data } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
-            const tbody = document.querySelector('#rank-table tbody');
-            tbody.innerHTML = (data || []).map(r => `<tr><td>${r.nome}</td><td>${r.pontos}</td><td>${r.acertos}</td><td>${r.erros}</td><td>${r.tempo_total}s</td></tr>`).join('');
+        async function deleteQ(id) {
+            if(confirm("Excluir esta pergunta?")) {
+                await _supabase.from('perguntas').delete().eq('id', id);
+                loadData();
+            }
+        }
+
+        async function loadData() {
+            // Carregar Ranking
+            const { data: rank } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
+            document.querySelector('#rank-table tbody').innerHTML = rank.map(r => `
+                <tr>
+                    <td><b>${r.nome}</b></td>
+                    <td>${r.pontos}</td>
+                    <td><span class="stat-badge correct">${r.acertos || 0}</span></td>
+                    <td><span class="stat-badge wrong">${r.erros || 0}</span></td>
+                    <td>${r.tempo_total || 0}s</td>
+                </tr>
+            `).join('');
+
+            // Carregar Perguntas
+            const { data: qs } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
+            document.getElementById('list-questions').innerHTML = qs.map(q => `
+                <div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <div style="font-size: 13px;">${q.pergunta}</div>
+                    <button class="btn btn-red" onclick="deleteQ(${q.id})">Excluir</button>
+                </div>
+            `).join('');
         }
     </script>
 </body>
