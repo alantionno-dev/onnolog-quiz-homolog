@@ -2,8 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM OnnoLog - Dashboard Profissional</title>
+    <title>OnnoLog ADM - Pro Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -14,20 +13,17 @@
         .grid-layout { display: grid; grid-template-columns: 1fr 1.8fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
         input, select { width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; color: white; margin-bottom: 12px; box-sizing: border-box; }
         .btn-action { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
-        .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
         table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
         th { background: #21262d; padding: 15px; border-bottom: 2px solid var(--primary); }
         td { padding: 12px; border-bottom: 1px solid #30363d; }
-        .stat-up { color: #3fb950; font-weight: bold; }
-        .stat-down { color: #f85149; font-weight: bold; }
     </style>
 </head>
 <body>
     <div id="login-zone" style="max-width: 400px; margin: 100px auto;">
         <div class="glass-card" style="text-align: center;">
             <h1 style="color: var(--primary)">OnnoLog ADM</h1>
-            <input type="text" id="user-setor" placeholder="Setor (TI)">
-            <input type="password" id="user-pass" placeholder="Senha">
+            <input type="text" id="adm-setor" placeholder="Setor (TI)">
+            <input type="password" id="adm-pass" placeholder="Senha">
             <button class="btn-action" onclick="entrar()">ACESSAR DASHBOARD</button>
         </div>
     </div>
@@ -35,32 +31,23 @@
     <div id="dash-zone" class="hidden">
         <div class="grid-layout">
             <div class="glass-card">
-                <h3>➕ Configurar Pergunta</h3>
-                <input type="text" id="q-txt" placeholder="Texto da Pergunta">
-                <input type="text" id="op1" placeholder="Opção 1">
-                <input type="text" id="op2" placeholder="Opção 2">
-                <input type="text" id="op3" placeholder="Opção 3">
-                <label style="font-size: 12px; display: block; margin-bottom: 5px;">Qual é a resposta correta?</label>
+                <h3>➕ Nova Pergunta</h3>
+                <input type="text" id="q-txt" placeholder="Pergunta">
+                <input type="text" id="op0" placeholder="Opção 1 (Gabarito)">
+                <input type="text" id="op1" placeholder="Opção 2">
+                <input type="text" id="op2" placeholder="Opção 3">
+                <label style="font-size: 11px;">Qual é a correta?</label>
                 <select id="q-correta">
                     <option value="0">Opção 1</option>
                     <option value="1">Opção 2</option>
                     <option value="2">Opção 3</option>
                 </select>
-                <button class="btn-action" onclick="gravarQuestao()">SALVAR NO BANCO</button>
+                <button class="btn-action" onclick="salvar()">SALVAR NO SUPABASE</button>
             </div>
-
             <div class="glass-card">
-                <h3>📊 Estatísticas de Usuários</h3>
+                <h3>📊 Estatísticas de Acertos</h3>
                 <table id="tabela-stats">
-                    <thead>
-                        <tr>
-                            <th>Usuário</th>
-                            <th>Pontos</th>
-                            <th>Acertos</th>
-                            <th>Erros</th>
-                            <th>Tempo Total</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Usuário</th><th>Pontos</th><th>✅</th><th>❌</th><th>Tempo</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -71,38 +58,31 @@
         const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94mkmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
 
         async function entrar() {
-            const s = document.getElementById('user-setor').value;
-            const p = document.getElementById('user-pass').value;
+            const s = document.getElementById('adm-setor').value;
+            const p = document.getElementById('adm-pass').value;
             const { data } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
             if(data) {
                 document.getElementById('login-zone').classList.add('hidden');
                 document.getElementById('dash-zone').classList.remove('hidden');
-                atualizarRanking();
-            } else { alert("Dados incorretos!"); }
+                carregarStats();
+            } else { alert("Acesso Negado!"); }
         }
 
-        async function gravarQuestao() {
-            const questao = {
+        async function salvar() {
+            const item = {
                 pergunta: document.getElementById('q-txt').value,
-                opcoes: [document.getElementById('op1').value, document.getElementById('op2').value, document.getElementById('op3').value],
+                opcoes: [document.getElementById('op0').value, document.getElementById('op1').value, document.getElementById('op2').value],
                 resposta_correta_index: parseInt(document.getElementById('q-correta').value),
                 setor: 'homolog'
             };
-            const { error } = await _supabase.from('perguntas').insert([questao]);
-            if(!error) { alert("Questão cadastrada!"); location.reload(); }
+            await _supabase.from('perguntas').insert([item]);
+            alert("Pergunta Gravada!");
         }
 
-        async function atualizarRanking() {
+        async function carregarStats() {
             const { data } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
-            const body = document.querySelector('#tabela-stats tbody');
-            body.innerHTML = (data || []).map(r => `
-                <tr>
-                    <td><b>${r.nome}</b></td>
-                    <td>${r.pontos}</td>
-                    <td class="stat-up">${r.acertos_quantidade || 0}</td>
-                    <td class="stat-down">${r.erros_quantidade || 0}</td>
-                    <td>${r.tempo_total_gasto || 0}s</td>
-                </tr>
+            document.querySelector('#tabela-stats tbody').innerHTML = (data || []).map(r => `
+                <tr><td>${r.nome}</td><td>${r.pontos}</td><td>${r.acertos_quantidade || 0}</td><td>${r.erros_quantidade || 0}</td><td>${r.tempo_total_gasto || 0}s</td></tr>
             `).join('');
         }
     </script>
