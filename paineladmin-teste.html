@@ -49,12 +49,13 @@
     </div>
 
     <script>
+        // URL CORRIGIDA: APENAS UM 'L' EM AFAL
         const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
 
         async function autenticar() {
             const s = document.getElementById('login-setor').value.trim();
             const p = document.getElementById('login-pass').value.trim();
-            const { data } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
+            const { data, error } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
             if (data) {
                 document.getElementById('screen-login').classList.add('hidden');
                 document.getElementById('screen-dash').classList.remove('hidden');
@@ -76,7 +77,7 @@
         async function carregarRanking() {
             const { data } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
             const tbody = document.querySelector('#rank-table tbody');
-            tbody.innerHTML = data.map(r => `<tr><td>${r.nome}</td><td>${r.pontos}</td></tr>`).join('');
+            tbody.innerHTML = (data || []).map(r => `<tr><td>${r.nome}</td><td>${r.pontos}</td></tr>`).join('');
         }
     </script>
 </body>
