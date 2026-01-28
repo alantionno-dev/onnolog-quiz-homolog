@@ -11,14 +11,15 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .game-panel { background: var(--primary); width: 90%; max-width: 420px; padding: 40px; border-radius: 32px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
         .hidden { display: none; }
-        .btn { background: white; color: var(--primary); border: none; padding: 18px; border-radius: 16px; cursor: pointer; width: 100%; font-weight: 700; margin-top: 20px; }
+        .btn { background: white; color: var(--primary); border: none; padding: 18px; border-radius: 16px; cursor: pointer; width: 100%; font-weight: 700; margin-top: 20px; font-size: 16px; }
         .option-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; width: 100%; border-radius: 12px; margin-bottom: 10px; cursor: pointer; text-align: left; }
+        input { width: 100%; padding: 15px; border-radius: 12px; border: none; margin-top: 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 <div class="game-panel" id="screen-home">
     <h1>OnnoLog Quiz</h1>
-    <input type="text" id="username" placeholder="Seu Nome" style="width:100%; padding:15px; border-radius:12px; border:none; margin-top:20px;">
+    <input type="text" id="username" placeholder="Seu Nome">
     <button class="btn" onclick="startQuiz()">COMEÇAR AGORA</button>
 </div>
 
@@ -28,16 +29,15 @@
 </div>
 
 <script>
-    // CHAVES SUBSTITUÍDAS
-    const _supabase = supabase.createClient('https://vkhhxafaaalprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+    const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
     
     let questions = [], currentIdx = 0, score = 0, user = "";
 
     async function startQuiz() {
-        user = document.getElementById('username').value;
-        if(!user) return alert("Digite seu nome!");
+        user = document.getElementById('username').value.trim();
+        if(!user) return alert("Identifique-se!");
         const { data } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
-        if(!data || data.length === 0) return alert("Cadastre perguntas no ADM para o setor 'homolog'!");
+        if(!data || data.length === 0) return alert("Aviso: Cadastre perguntas para 'homolog' no ADM!");
         questions = data;
         document.getElementById('screen-home').classList.add('hidden');
         document.getElementById('screen-quiz').classList.remove('hidden');
@@ -60,7 +60,7 @@
 
     async function endQuiz() {
         await _supabase.from('ranking').insert([{ nome: user, pontos: score, setor: 'homolog' }]);
-        alert("Fim! Pontos: " + score);
+        alert("Fim! Pontuação: " + score);
         location.reload();
     }
 </script>
