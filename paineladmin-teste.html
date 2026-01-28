@@ -3,72 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OnnoLog - Master Admin</title>
+    <title>ADM OnnoLog - Dashboard Profissional</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #018578; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        :root { --primary: #018578; --bg: #0b0f1a; --card: #161b22; --text: #f0f6fc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; }
         .hidden { display: none; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 30px; }
-        .grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
-        input, select { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; margin-bottom: 10px; box-sizing: border-box; }
-        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.3s; }
-        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
-        .btn-red { background: #ef4444; margin-top: 5px; font-size: 12px; padding: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
-        .stat-badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; }
-        .correct { background: #10b98122; color: #10b981; }
-        .wrong { background: #ef444422; color: #ef4444; }
+        .glass-card { background: var(--card); border: 1px solid #30363d; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1.8fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        input, select { width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; color: white; margin-bottom: 12px; box-sizing: border-box; }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
+        th { background: #21262d; padding: 15px; border-bottom: 2px solid var(--primary); }
+        td { padding: 12px; border-bottom: 1px solid #30363d; }
+        .stat-up { color: #3fb950; font-weight: bold; }
+        .stat-down { color: #f85149; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container" id="login-box">
-        <div class="glass" style="max-width: 400px; margin: 100px auto; text-align: center;">
-            <h1 style="color: var(--primary)">🔐 OnnoLog ADM</h1>
-            <input type="text" id="adm-setor" placeholder="Setor (TI)">
-            <input type="password" id="adm-pass" placeholder="Senha">
-            <button class="btn" onclick="login()">ACESSAR SISTEMA</button>
+    <div id="login-zone" style="max-width: 400px; margin: 100px auto;">
+        <div class="glass-card" style="text-align: center;">
+            <h1 style="color: var(--primary)">OnnoLog ADM</h1>
+            <input type="text" id="user-setor" placeholder="Setor (TI)">
+            <input type="password" id="user-pass" placeholder="Senha">
+            <button class="btn-action" onclick="entrar()">ACESSAR DASHBOARD</button>
         </div>
     </div>
 
-    <div class="container hidden" id="main-dash">
-        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2>Painel de Controle: <span id="label-setor" style="color: var(--primary)"></span></h2>
-            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="location.reload()">SAIR</button>
-        </header>
-
-        <div class="grid">
-            <div class="glass">
-                <h3>➕ Gerenciar Perguntas</h3>
-                <input type="text" id="q-text" placeholder="Pergunta">
-                <input type="text" id="opt0" placeholder="Opção 1">
-                <input type="text" id="opt1" placeholder="Opção 2">
-                <input type="text" id="opt2" placeholder="Opção 3">
-                <label>Resposta Correta:</label>
-                <select id="q-correct">
+    <div id="dash-zone" class="hidden">
+        <div class="grid-layout">
+            <div class="glass-card">
+                <h3>➕ Configurar Pergunta</h3>
+                <input type="text" id="q-txt" placeholder="Texto da Pergunta">
+                <input type="text" id="op1" placeholder="Opção 1">
+                <input type="text" id="op2" placeholder="Opção 2">
+                <input type="text" id="op3" placeholder="Opção 3">
+                <label style="font-size: 12px; display: block; margin-bottom: 5px;">Qual é a resposta correta?</label>
+                <select id="q-correta">
                     <option value="0">Opção 1</option>
                     <option value="1">Opção 2</option>
                     <option value="2">Opção 3</option>
                 </select>
-                <button class="btn" onclick="addPergunta()">SALVAR QUESTÃO</button>
-                <hr style="opacity: 0.1; margin: 20px 0;">
-                <h4>Perguntas Ativas</h4>
-                <div id="list-questions" style="max-height: 300px; overflow-y: auto;"></div>
+                <button class="btn-action" onclick="gravarQuestao()">SALVAR NO BANCO</button>
             </div>
 
-            <div class="glass">
-                <h3>📊 Ranking e Estatísticas</h3>
-                <table id="rank-table">
+            <div class="glass-card">
+                <h3>📊 Estatísticas de Usuários</h3>
+                <table id="tabela-stats">
                     <thead>
                         <tr>
                             <th>Usuário</th>
                             <th>Pontos</th>
-                            <th>✅ Acertos</th>
-                            <th>❌ Erros</th>
-                            <th>⏱️ Tempo</th>
+                            <th>Acertos</th>
+                            <th>Erros</th>
+                            <th>Tempo Total</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -80,56 +70,39 @@
     <script>
         const _supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94mkmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
 
-        async function login() {
-            const s = document.getElementById('adm-setor').value;
-            const p = document.getElementById('adm-pass').value;
+        async function entrar() {
+            const s = document.getElementById('user-setor').value;
+            const p = document.getElementById('user-pass').value;
             const { data } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
             if(data) {
-                document.getElementById('login-box').classList.add('hidden');
-                document.getElementById('main-dash').classList.remove('hidden');
-                document.getElementById('label-setor').innerText = s;
-                loadData();
+                document.getElementById('login-zone').classList.add('hidden');
+                document.getElementById('dash-zone').classList.remove('hidden');
+                atualizarRanking();
             } else { alert("Dados incorretos!"); }
         }
 
-        async function addPergunta() {
-            const payload = {
-                pergunta: document.getElementById('q-text').value,
-                opcoes: [document.getElementById('opt0').value, document.getElementById('opt1').value, document.getElementById('opt2').value],
-                correta: parseInt(document.getElementById('q-correct').value),
+        async function gravarQuestao() {
+            const questao = {
+                pergunta: document.getElementById('q-txt').value,
+                opcoes: [document.getElementById('op1').value, document.getElementById('op2').value, document.getElementById('op3').value],
+                resposta_correta_index: parseInt(document.getElementById('q-correta').value),
                 setor: 'homolog'
             };
-            const { error } = await _supabase.from('perguntas').insert([payload]);
-            if(!error) { alert("Sucesso!"); loadData(); }
+            const { error } = await _supabase.from('perguntas').insert([questao]);
+            if(!error) { alert("Questão cadastrada!"); location.reload(); }
         }
 
-        async function deleteQ(id) {
-            if(confirm("Excluir esta pergunta?")) {
-                await _supabase.from('perguntas').delete().eq('id', id);
-                loadData();
-            }
-        }
-
-        async function loadData() {
-            // Carregar Ranking
-            const { data: rank } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
-            document.querySelector('#rank-table tbody').innerHTML = rank.map(r => `
+        async function atualizarRanking() {
+            const { data } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
+            const body = document.querySelector('#tabela-stats tbody');
+            body.innerHTML = (data || []).map(r => `
                 <tr>
                     <td><b>${r.nome}</b></td>
                     <td>${r.pontos}</td>
-                    <td><span class="stat-badge correct">${r.acertos || 0}</span></td>
-                    <td><span class="stat-badge wrong">${r.erros || 0}</span></td>
-                    <td>${r.tempo_total || 0}s</td>
+                    <td class="stat-up">${r.acertos_quantidade || 0}</td>
+                    <td class="stat-down">${r.erros_quantidade || 0}</td>
+                    <td>${r.tempo_total_gasto || 0}s</td>
                 </tr>
-            `).join('');
-
-            // Carregar Perguntas
-            const { data: qs } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
-            document.getElementById('list-questions').innerHTML = qs.map(q => `
-                <div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                    <div style="font-size: 13px;">${q.pergunta}</div>
-                    <button class="btn btn-red" onclick="deleteQ(${q.id})">Excluir</button>
-                </div>
             `).join('');
         }
     </script>
