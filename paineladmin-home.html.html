@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM OnnoLog - Homologação</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #018578; 
+            --bg: #0f172a; 
+            --text: #ffffff; 
+            --card-inner: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px;
+        }
+
+        /* Painel ADM com a cor base #018578 */
+        .admin-panel { 
+            background: var(--primary); 
+            width: 100%; 
+            max-width: 800px; 
+            padding: 40px; 
+            border-radius: 32px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+        }
+
+        .hidden { display: none; }
+        
+        h2 { font-weight: 800; margin-top: 0; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        input { 
+            width: 100%; padding: 12px; background: var(--card-inner); border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 12px; color: white; margin-bottom: 10px; box-sizing: border-box;
+        }
+        input::placeholder { color: rgba(255,255,255,0.6); }
+
+        .btn { 
+            background: white; color: var(--primary); border: none; padding: 14px; 
+            border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s;
+        }
+        .btn:hover { background: #f0f0f0; transform: translateY(-2px); }
+
+        .btn-danger { background: #ef4444; color: white; margin-top: 10px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: var(--card-inner); border-radius: 16px; overflow: hidden; }
+        th { text-align: left; padding: 15px; background: rgba(0,0,0,0.1); font-size: 13px; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
+
+        .tag-ti { background: #3b82f6; padding: 2px 8px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div class="admin-panel" id="screen-login" style="max-width: 380px; text-align: center;">
+    <h2>🔐 ADM Login</h2>
+    <p>Acesso Homologação</p>
+    <input type="text" id="login-setor" placeholder="Ex: TI ou RH">
+    <input type="password" id="login-pass" placeholder="Senha do Setor">
+    <button class="btn" onclick="autenticar()">ENTRAR NO PAINEL</button>
+</div>
+
+<div class="admin-panel hidden" id="screen-dash">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h2>Painel: <span id="label-setor">---</span></h2>
+        <button class="btn" style="width: auto; padding: 8px 15px;" onclick="location.reload()">SAIR</button>
+    </div>
+
+    <div class="grid">
+        <div>
+            <h3>➕ Nova Pergunta</h3>
+            <input type="text" id="new-q" placeholder="Pergunta">
+            <input type="text" id="new-c" placeholder="Correta">
+            <input type="text" id="new-e1" placeholder="Errada 1">
+            <input type="text" id="new-e2" placeholder="Errada 2">
+            <button class="btn" onclick="salvarPergunta()">SALVAR NO BANCO</button>
+        </div>
+
+        <div>
+            <h3>📊 Ranking <span id="badge-setor" class="tag-ti hidden">TI</span></h3>
+            <table id="rank-table">
+                <thead><tr><th>Nome</th><th>Pts</th><th>Acertos</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <button class="btn btn-danger" onclick="limparRanking()">ZERAR RANKING</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Conexão com o NOVO Projeto Supabase de Homologação
+    const _supabase = supabase.createClient('SUA_URL_SUPABASE_NOVA', 'SUA_KEY_ANON_SUPABASE_NOVA');
+    let setorLogado = "";
+
+    async function autenticar() {
+        const s = document.getElementById('login-setor').value;
+        const p = document.getElementById('login-pass').value;
+
+        // Verifica credenciais na tabela de gestores
+        const { data } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
+
+        if(data) {
+            setorLogado = s;
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-dash').classList.remove('hidden');
+            document.getElementById('label-setor').innerText = s;
+            
+            if(s.toUpperCase() === 'TI') document.getElementById('badge-setor').classList.remove('hidden');
+            
+            carregarDados();
+        } else {
+            alert("Acesso negado! Cadastre o setor/senha no SQL Editor do novo Supabase primeiro.");
+        }
+    }
+
+    async function carregarDados() {
+        const { data: qs } = await _supabase.from('perguntas').select('*').eq('setor', setorLogado);
+        const { data: rs } = await _supabase.from('ranking').select('*').eq('setor', setorLogado).order('pontos', {ascending: false});
+        
+        const tbody = document.querySelector('#rank-table tbody');
+        tbody.innerHTML = rs.map(r => `
+            <tr>
+                <td>${r.nome}</td>
+                <td>${r.pontos}</td>
+                <td>${r.acertos_reais}/${qs.length}</td>
+            </tr>
+        `).join('');
+    }
+
+    async function salvarPergunta() {
+        const q = document.getElementById('new-q').value;
+        const c = document.getElementById('new-c').value;
+        const e1 = document.getElementById('new-e1').value;
+        const e2 = document.getElementById('new-e2').value;
+
+        await _supabase.from('perguntas').insert([{ 
+            pergunta: q, opcoes: [c, e1, e2], correta: 0, setor: setorLogado 
+        }]);
+        
+        alert("Pergunta de " + setorLogado + " salva!");
+        carregarDados();
+    }
+
+    async function limparRanking() {
+        if(confirm("Deseja apagar os testes do setor " + setorLogado + "?")) {
+            await _supabase.from('ranking').delete().eq('setor', setorLogado);
+            carregarDados();
+        }
+    }
+</script>
+</body>
+</html>

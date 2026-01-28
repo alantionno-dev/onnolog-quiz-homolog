@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnnoLog Quiz - Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #018578; 
+            --bg: #0f172a; 
+            --text: #ffffff; 
+            --card-inner: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+
+        /* O Painel do Jogo com a sua cor base */
+        .game-panel { 
+            background: var(--primary); 
+            width: 90%; 
+            max-width: 420px; 
+            padding: 40px; 
+            border-radius: 32px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4); 
+            text-align: center;
+            position: relative;
+        }
+
+        .hidden { display: none; }
+
+        h1 { font-weight: 800; font-size: 28px; margin-bottom: 5px; }
+        .subtitle { opacity: 0.8; font-size: 14px; margin-bottom: 30px; }
+
+        /* Inputs e Botões dentro do painel */
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--card-inner); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 16px; 
+            color: white; 
+            font-size: 16px; 
+            margin-bottom: 20px; 
+            box-sizing: border-box; 
+        }
+        input::placeholder { color: rgba(255,255,255,0.6); }
+
+        .btn-start { 
+            background: white; 
+            color: var(--primary); 
+            border: none; 
+            padding: 18px; 
+            border-radius: 16px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: 700; 
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn-start:hover { transform: scale(1.02); background: #f0f0f0; }
+
+        /* Botões de Opção no Quiz */
+        .option-btn { 
+            background: var(--card-inner); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            text-align: left; 
+            margin-bottom: 12px; 
+            color: white; 
+            padding: 18px;
+            width: 100%;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.25); border-color: white; }
+
+        /* Timer e Progresso */
+        .progress-container { width: 100%; height: 6px; background: rgba(0,0,0,0.2); border-radius: 3px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { width: 100%; height: 100%; background: white; transition: width 1s linear; }
+
+        .stats { display: flex; justify-content: space-between; font-weight: 700; font-size: 12px; opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="game-panel" id="screen-home">
+    <h1>OnnoLog Quiz</h1>
+    <p class="subtitle">Ambiente de Homologação</p>
+    
+    <input type="text" id="username" placeholder="Digite seu nome">
+    <button class="btn-start" onclick="startQuiz()">COMEÇAR AGORA</button>
+</div>
+
+<div class="game-panel hidden" id="screen-quiz">
+    <div class="stats">
+        <span id="score-txt">PONTOS: 0</span>
+        <span id="timer-txt">30s</span>
+    </div>
+    <div class="progress-container"><div class="progress-bar" id="timer-fill"></div></div>
+    
+    <h3 id="q-text" style="margin: 30px 0; font-size: 20px; line-height: 1.4;">Carregando...</h3>
+    <div id="options-box"></div>
+</div>
+
+<script>
+    // Configurações do Novo Projeto Supabase
+    const _supabase = supabase.createClient('SUA_URL_AQUI', 'SUA_KEY_AQUI');
+    const setorAtivo = "homolog";
+
+    let questions = [], currentIdx = 0, score = 0, hits = 0, timeLeft = 30, timerInterval, user = "";
+
+    async function startQuiz() {
+        user = document.getElementById('username').value.trim();
+        if(!user) return alert("Identifique-se!");
+
+        const { data } = await _supabase.from('perguntas').select('*').eq('setor', setorAtivo);
+        if(!data || data.length === 0) return alert("Adicione perguntas no ADM primeiro!");
+
+        questions = data;
+        document.getElementById('screen-home').classList.add('hidden');
+        document.getElementById('screen-quiz').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if(currentIdx >= questions.length) return endQuiz();
+        
+        timeLeft = 30;
+        updateTimer();
+        const q = questions[currentIdx];
+        document.getElementById('q-text').innerText = q.pergunta;
+        const box = document.getElementById('options-box'); box.innerHTML = "";
+        
+        q.opcoes.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(i === q.correta);
+            box.appendChild(btn);
+        });
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimer();
+            if(timeLeft <= 0) handleAnswer(false);
+        }, 1000);
+    }
+
+    function updateTimer() {
+        document.getElementById('timer-txt').innerText = timeLeft + "s";
+        document.getElementById('timer-fill').style.width = (timeLeft/30*100) + "%";
+    }
+
+    async function handleAnswer(isCorrect) {
+        clearInterval(timerInterval);
+        if(isCorrect) { score += 100 + timeLeft; hits++; }
+        document.getElementById('score-txt').innerText = "PONTOS: " + score;
+        currentIdx++;
+        showQuestion();
+    }
+
+    async function endQuiz() {
+        await _supabase.from('ranking').insert([{ 
+            nome: user, pontos: score, acertos_reais: hits, setor: setorAtivo 
+        }]);
+        alert(`Fim! Pontuação: ${score}`);
+        location.reload();
+    }
+</script>
+</body>
+</html>
