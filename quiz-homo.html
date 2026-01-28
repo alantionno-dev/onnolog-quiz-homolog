@@ -19,7 +19,7 @@
 <body>
 <div class="game-panel" id="screen-home">
     <h1>OnnoLog Quiz</h1>
-    <input type="text" id="username" placeholder="Seu Nome">
+    <input type="text" id="username" placeholder="Digite seu nome">
     <button class="btn" onclick="startQuiz()">COMEÇAR AGORA</button>
 </div>
 
@@ -37,7 +37,7 @@
         user = document.getElementById('username').value.trim();
         if(!user) return alert("Identifique-se!");
         const { data } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
-        if(!data || data.length === 0) return alert("Aviso: Cadastre perguntas para 'homolog' no ADM!");
+        if(!data || data.length === 0) return alert("Cadastre perguntas para 'homolog' no ADM!");
         questions = data;
         document.getElementById('screen-home').classList.add('hidden');
         document.getElementById('screen-quiz').classList.remove('hidden');
