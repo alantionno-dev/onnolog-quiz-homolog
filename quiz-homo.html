@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnnoLog Quiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #018578; --bg: #0f172a; --text: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .game-panel { background: var(--primary); width: 90%; max-width: 420px; padding: 40px; border-radius: 32px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        .hidden { display: none; }
+        .btn { background: white; color: var(--primary); border: none; padding: 18px; border-radius: 16px; cursor: pointer; width: 100%; font-weight: 700; margin-top: 20px; }
+        .option-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; width: 100%; border-radius: 12px; margin-bottom: 10px; cursor: pointer; text-align: left; }
+    </style>
+</head>
+<body>
+<div class="game-panel" id="screen-home">
+    <h1>OnnoLog Quiz</h1>
+    <input type="text" id="username" placeholder="Seu Nome" style="width:100%; padding:15px; border-radius:12px; border:none; margin-top:20px;">
+    <button class="btn" onclick="startQuiz()">COMEÇAR AGORA</button>
+</div>
+
+<div class="game-panel hidden" id="screen-quiz">
+    <h3 id="q-text">Carregando...</h3>
+    <div id="options-box"></div>
+</div>
+
+<script>
+    // CHAVES SUBSTITUÍDAS
+    const _supabase = supabase.createClient('https://vkhhxafaaalprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+    
+    let questions = [], currentIdx = 0, score = 0, user = "";
+
+    async function startQuiz() {
+        user = document.getElementById('username').value;
+        if(!user) return alert("Digite seu nome!");
+        const { data } = await _supabase.from('perguntas').select('*').eq('setor', 'homolog');
+        if(!data || data.length === 0) return alert("Cadastre perguntas no ADM para o setor 'homolog'!");
+        questions = data;
+        document.getElementById('screen-home').classList.add('hidden');
+        document.getElementById('screen-quiz').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if(currentIdx >= questions.length) return endQuiz();
+        const q = questions[currentIdx];
+        document.getElementById('q-text').innerText = q.pergunta;
+        const box = document.getElementById('options-box'); box.innerHTML = "";
+        q.opcoes.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => { if(i === q.correta) score += 100; currentIdx++; showQuestion(); };
+            box.appendChild(btn);
+        });
+    }
+
+    async function endQuiz() {
+        await _supabase.from('ranking').insert([{ nome: user, pontos: score, setor: 'homolog' }]);
+        alert("Fim! Pontos: " + score);
+        location.reload();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM OnnoLog - Homologação</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #018578; --bg: #0f172a; --text: #ffffff; --card-inner: rgba(255, 255, 255, 0.1); }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .admin-panel { background: var(--primary); width: 100%; max-width: 800px; padding: 40px; border-radius: 32px; box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        .hidden { display: none; }
+        input { width: 100%; padding: 12px; background: var(--card-inner); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { background: white; color: var(--primary); border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: var(--card-inner); border-radius: 16px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+<div class="admin-panel" id="screen-login" style="max-width: 380px; text-align: center;">
+    <h2>🔐 ADM Login</h2>
+    <input type="text" id="login-setor" placeholder="Setor (Ex: TI)">
+    <input type="password" id="login-pass" placeholder="Senha">
+    <button class="btn" onclick="autenticar()">ENTRAR NO PAINEL</button>
+</div>
+
+<div class="admin-panel hidden" id="screen-dash">
+    <h2>Painel: <span id="label-setor">---</span></h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+            <h3>➕ Nova Pergunta</h3>
+            <input type="text" id="new-q" placeholder="Pergunta">
+            <input type="text" id="new-c" placeholder="Correta">
+            <input type="text" id="new-e1" placeholder="Errada 1">
+            <input type="text" id="new-e2" placeholder="Errada 2">
+            <input type="text" id="new-setor" placeholder="Setor da Pergunta (ex: homolog)" value="homolog">
+            <button class="btn" onclick="salvarPergunta()">SALVAR</button>
+        </div>
+        <div>
+            <h3>📊 Ranking</h3>
+            <table id="rank-table"><thead><tr><th>Nome</th><th>Pts</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CHAVES SUBSTITUÍDAS
+    const _supabase = supabase.createClient('https://vkhhxafaaalprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+
+    let setorLogado = "";
+    async function autenticar() {
+        const s = document.getElementById('login-setor').value;
+        const p = document.getElementById('login-pass').value;
+        const { data } = await _supabase.from('gestores').select('*').eq('setor', s).eq('senha', p).single();
+        if(data) {
+            setorLogado = s;
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-dash').classList.remove('hidden');
+            document.getElementById('label-setor').innerText = s;
+            carregarDados();
+        } else { alert("Acesso negado!"); }
+    }
+
+    async function salvarPergunta() {
+        const q = document.getElementById('new-q').value;
+        const c = document.getElementById('new-c').value;
+        const e1 = document.getElementById('new-e1').value;
+        const e2 = document.getElementById('new-e2').value;
+        const s = document.getElementById('new-setor').value;
+        await _supabase.from('perguntas').insert([{ pergunta: q, opcoes: [c, e1, e2], correta: 0, setor: s }]);
+        alert("Pergunta salva!");
+        carregarDados();
+    }
+
+    async function carregarDados() {
+        const { data: rs } = await _supabase.from('ranking').select('*').order('pontos', {ascending: false});
+        const tbody = document.querySelector('#rank-table tbody');
+        tbody.innerHTML = rs.map(r => `<tr><td>${r.nome}</td><td>${r.pontos}</td></tr>`).join('');
+    }
+</script>
+</body>
+</html>
