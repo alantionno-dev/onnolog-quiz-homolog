@@ -2,81 +2,127 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Pequenos Profetas Quiz</title>
+    <title>OnnoLog ADM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #764ba2; --secondary: #667eea; --bg: #f8fafc; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 1000px; margin: auto; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px; font-size: 1.25rem; }
-        input, select, button { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
-        button { background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        button:hover { background: var(--secondary); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; color: #64748b; }
-        .badge { padding: 4px 8px; border-radius: 4px; background: #dcfce7; color: #166534; font-weight: bold; }
+        :root { --p: #6366f1; --s: #22c55e; --e: #ef4444; --bg: #f8fafc; --dark: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); padding: 40px; margin: 0; }
+        .dashboard { max-width: 1000px; margin: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-top: 4px solid var(--p); }
+        .card.success { border-top-color: var(--s); }
+        .card.error { border-top-color: var(--e); }
+        .full { grid-column: span 4; }
+        .half { grid-column: span 2; }
+        .label { font-size: 14px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .value { font-size: 32px; font-weight: 700; display: block; margin-top: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 12px; overflow: hidden; }
+        th { background: #f1f5f9; text-align: left; padding: 16px; font-size: 13px; color: #64748b; }
+        td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .btn { background: var(--p); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+        .q-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .del-q { color: var(--e); cursor: pointer; border: none; background: none; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Dashboard Administrativo</h1>
-        
-        <div class="grid">
-            <div class="card">
-                <h2>Criar Nova Pergunta</h2>
-                <form id="question-form">
-                    <input type="text" id="q-text" placeholder="Ex: Quem construiu a arca?" required>
-                    <div id="opts">
-                        <input type="text" class="opt" placeholder="Opção 0" required>
-                        <input type="text" class="opt" placeholder="Opção 1" required>
-                        <input type="text" class="opt" placeholder="Opção 2" required>
-                        <input type="text" class="opt" placeholder="Opção 3" required>
-                    </div>
-                    <label style="display:block; margin-top:10px;">Índice da Resposta Correta:</label>
-                    <select id="correct-idx">
-                        <option value="0">Opção 0</option>
-                        <option value="1">Opção 1</option>
-                        <option value="2">Opção 2</option>
-                        <option value="3">Opção 3</option>
-                    </select>
-                    <button type="submit" style="margin-top:20px;">Publicar Pergunta</button>
-                </form>
-            </div>
 
-            <div class="card">
-                <h2>Ranking de Participantes</h2>
-                <table id="leaderboard">
-                    <thead><tr><th>Nome</th><th>Pontuação</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+<div class="dashboard">
+    <div class="card"><span class="label">Participantes</span><span class="value" id="st-total">0</span></div>
+    <div class="card"><span class="label">Média Global</span><span class="value" id="st-avg">0</span></div>
+    <div class="card success"><span class="label">% Acerto Real</span><span class="value" id="st-hit" style="color:var(--s)">0%</span></div>
+    <div class="card error"><span class="label">% Erro Real</span><span class="value" id="st-miss" style="color:var(--e)">0%</span></div>
+
+    <div class="card half">
+        <h3 style="margin-top:0">Nova Pergunta</h3>
+        <input type="text" id="new-q" placeholder="Texto da Pergunta">
+        <input type="text" id="new-o1" placeholder="Opção CORRETA" style="border-left: 4px solid var(--s)">
+        <input type="text" id="new-o2" placeholder="Opção Errada 1" style="border-left: 4px solid var(--e)">
+        <input type="text" id="new-o3" placeholder="Opção Errada 2" style="border-left: 4px solid var(--e)">
+        <input type="text" id="new-o4" placeholder="Opção Errada 3" style="border-left: 4px solid var(--e)">
+        <button class="btn" onclick="addQuestion()">ADICIONAR PERGUNTA</button>
     </div>
 
-    <script>
-        const supabase = supabase.createClient('https://vkhhxafaallprvqoxmkm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraGh4YWZhYWxscHJ2cW94bWttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDMxMDksImV4cCI6MjA4NTE3OTEwOX0.VDk20bjL9AxV4aHrZX-fH7xBrhndqxwrjFdFlxJrbBk');
+    <div class="card half">
+        <h3 style="margin-top:0">Perguntas Ativas</h3>
+        <div id="q-list" style="max-height: 250px; overflow-y: auto; font-size: 13px;">Carregando...</div>
+    </div>
 
-        document.getElementById('question-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const options = Array.from(document.querySelectorAll('.opt')).map(i => i.value);
-            const { error } = await supabase.from('questions').insert([{
-                question_text: document.getElementById('q-text').value,
-                options: options,
-                correct_index: parseInt(document.getElementById('correct-idx').value)
-            }]);
-            if (!error) { alert("Pergunta Adicionada!"); location.reload(); }
-        };
+    <div class="card full">
+        <h3 style="margin-top:0">Desempenho (Rondonópolis)</h3>
+        <table id="rank-table">
+            <thead><tr><th>Nome</th><th>Pontos</th><th>Acertos</th><th>Horário</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <button onclick="clearRanking()" style="background:none; border:none; color:var(--e); cursor:pointer; margin-top:20px; font-size:12px;">ZERAR TODOS OS RESULTADOS</button>
+    </div>
+</div>
 
-        async function loadLeaderboard() {
-            const { data } = await supabase.from('participants').select('*').order('total_score', { ascending: false });
-            const tbody = document.querySelector('#leaderboard tbody');
-            tbody.innerHTML = data.map(p => `<tr><td>${p.name}</td><td><span class="badge">${p.total_score} pts</span></td></tr>`).join('');
+<script>
+    const _supabase = supabase.createClient('https://zdthxlhknxpbdfzcozls.supabase.co', 'sb_publishable_6gT5fcstwt1QLjCf5PCAPA_2Ec_6mU4');
+
+    async function load() {
+        const { data: qs } = await _supabase.from('perguntas').select('*');
+        const { data: rs } = await _supabase.from('ranking').select('*').order('pontos', { ascending: false });
+        
+        if(qs) {
+            document.getElementById('q-list').innerHTML = qs.map(q => `
+                <div class="q-item">
+                    <span>${q.pergunta}</span>
+                    <button class="del-q" onclick="deleteQuestion(${q.id})">EXCLUIR</button>
+                </div>
+            `).join('');
         }
-        loadLeaderboard();
-    </script>
+        if(rs) renderStats(rs, qs ? qs.length : 0);
+    }
+
+    function renderStats(data, totalQ) {
+        const total = data.length;
+        document.getElementById('st-total').innerText = total;
+        const avg = total > 0 ? Math.round(data.reduce((a, b) => a + b.pontos, 0) / total) : 0;
+        document.getElementById('st-avg').innerText = avg;
+
+        const hits = data.reduce((a, b) => a + (b.acertos_reais || 0), 0);
+        const totalPossible = total * totalQ;
+        const perc = totalPossible > 0 ? Math.round((hits / totalPossible) * 100) : 0;
+
+        document.getElementById('st-hit').innerText = perc + "%";
+        document.getElementById('st-miss').innerText = (total > 0 ? 100 - perc : 0) + "%";
+
+        document.querySelector('#rank-table tbody').innerHTML = data.map(s => {
+            const time = s.criado_em ? new Date(s.criado_em).toLocaleString("pt-BR", {timeZone: "America/Cuiaba"}) : "---";
+            return `<tr><td><b>${s.nome}</b></td><td>${s.pontos} pts</td><td>${s.acertos_reais || 0}/${totalQ}</td><td>${time}</td></tr>`;
+        }).join('');
+    }
+
+    async function addQuestion() {
+        const q = document.getElementById('new-q').value;
+        const o1 = document.getElementById('new-o1').value;
+        const o2 = document.getElementById('new-o2').value;
+        const o3 = document.getElementById('new-o3').value;
+        const o4 = document.getElementById('new-o4').value;
+
+        if(!q || !o1 || !o2 || !o3 || !o4) return alert("Por favor, preencha a pergunta e todas as 4 opções!");
+
+        const { error } = await _supabase.from('perguntas').insert([{ 
+            pergunta: q, 
+            opcoes: [o1, o2, o3, o4], 
+            correta: 0 
+        }]);
+
+        if(error) alert("Erro ao salvar: " + error.message);
+        else location.reload();
+    }
+
+    async function deleteQuestion(id) {
+        if(confirm("Deseja realmente excluir esta pergunta?")) {
+            await _supabase.from('perguntas').delete().eq('id', id);
+            load();
+        }
+    }
+
+    async function clearRanking() { if(confirm("Zerar ranking?")) { await _supabase.from('ranking').delete().neq('id', 0); load(); } }
+    
+    load();
+</script>
 </body>
 </html>
